@@ -33,5 +33,9 @@ namespace MagicExpression.Inner
         /// ()
         /// </summary>
         Bracket,
+        /// <summary>
+        /// call Enumerable Ex Method
+        /// </summary>
+        CallMethod,
     }
 }

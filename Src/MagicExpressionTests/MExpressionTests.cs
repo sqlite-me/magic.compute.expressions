@@ -115,6 +115,10 @@ namespace MagicExpression.Tests
             rlt = call(expStr, args);
             Assert.AreEqual(rlt, (DateTime.Now - DateTime.MinValue).Days);
 
+            expStr = "({0} is not TimeSpan ts)? {1}:ts.Days";
+            args = new object[] { (object)(DateTime.Now - DateTime.MinValue), "i an string" };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, (DateTime.Now - DateTime.MinValue).Days);
 
             expStr = "({0} is IList ts)? \"yes\": \"no\"";
             args = new object[] { (object)(new string[] {"a","b","c" }), "yes","no" };
@@ -145,6 +149,50 @@ namespace MagicExpression.Tests
             @delegate = mExp.GetDelegate(new object[] { 20, 3, 4d, 2 }, out args);
             rlt = @delegate.DynamicInvoke(args);
             Assert.AreEqual(rlt, 60d);
+
+            mExp = new MExpression("({0},{0},{2},{3}).Sum()");
+            @delegate = mExp.GetDelegate(new object[] { 20, 3, 4d, 2 }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 46d);
+
+            mExp = new MExpression("({0},{0},{2},{3}).Max()");
+            @delegate = mExp.GetDelegate(new object[] { 20, 3, 4d, 2 }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 20d);
+
+            mExp = new MExpression("({0},{0},{2},{3}).Min()");
+            @delegate = mExp.GetDelegate(new object[] { 20, 3, 4d, 2 }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 2d);
+
+            var timeNow = DateTime.Now;
+            var timeDate = timeNow.Date;
+            var max = new[] { timeNow, timeDate }.Max();
+            mExp = new MExpression("({0},{1}).Max()");
+            @delegate = mExp.GetDelegate(new object[] { timeNow, timeDate }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, timeNow);
+
+            mExp = new MExpression("({0},{1}).Min()");
+            @delegate = mExp.GetDelegate(new object[] { timeNow, timeDate }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, timeDate);
+
+
+            mExp = new MExpression("({0} is not DateTime t1)?{1}:(({1} is not DateTime t2)?t1:(t1,t2).Max())");
+            @delegate = mExp.GetDelegate(new object[] {new TimeSpan(), timeDate }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, timeDate);
+
+            mExp = new MExpression("({0} is not DateTime t1||{1} is not DateTime t2)?null:(t1,t2).Max()");
+            @delegate = mExp.GetDelegate(new object[] { new TimeSpan(), timeDate }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, null);
+
+            mExp = new MExpression("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:(t1,t2).Max()");
+            @delegate = mExp.GetDelegate(new object[] { timeNow, timeDate }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, timeNow);
         }
     }
 }

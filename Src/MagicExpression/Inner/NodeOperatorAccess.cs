@@ -7,10 +7,10 @@ namespace MagicExpression.Inner
 {
     internal class NodeOperatorAccess : NodeOperator
     {
-        public NodeOperatorAccess(string propertyName, string orginalStr, int orignalIndex)
+        public NodeOperatorAccess(string orginalStr, int orignalIndex)
             : base(NodeType.Operator_Access, ".", orginalStr, orignalIndex)
         {
-            this.PropertyName = propertyName;
+            this.PropertyName = orginalStr.Trim(' ', '.');
         }
 
         public NodeData Target { get; set; }

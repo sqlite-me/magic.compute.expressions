@@ -11,7 +11,7 @@ namespace MagicExpression.Inner
     {
         private ParameterExpression variableExpression;
         private TypeBinaryExpression typeIsExpresson;
-        private UnaryExpression valueExpression;
+        private Expression valueExpression;
 
         public NodeOperatorType(string @operator, string typeName, string orginalStr, int orignalIndex)
             : base(NodeType.Operator_Type, @operator, orginalStr, orignalIndex)
@@ -59,7 +59,7 @@ namespace MagicExpression.Inner
             return expression;
         }
 
-        public UnaryExpression GetValueExpresson()
+        public Expression GetValueExpresson()
         {
             if (!string.IsNullOrEmpty(VariableName) && valueExpression == null)
             {
@@ -85,7 +85,16 @@ namespace MagicExpression.Inner
         }
         public ConditionalExpression GetAssain()
         {
-            return Expression.IfThen(GetTypeIsExpression(), Expression.Assign(GetVariableExpression(), GetValueExpresson()));
+            var ifExp = GetTypeIsExpression();
+            var varExp = GetVariableExpression();
+            var valExp = GetValueExpresson();
+            Expression thenExp;
+            try { thenExp = Expression.Assign(varExp, valExp); }
+            catch
+            {
+                thenExp = Expression.Assign(varExp, Expression.Default(varExp.Type));
+            }
+            return Expression.IfThen(ifExp, thenExp);
         }
         public void ClearVariable()
         {
@@ -93,11 +102,19 @@ namespace MagicExpression.Inner
             typeIsExpresson = null;
         }
 
-        private UnaryExpression asType()
+        private Expression asType()
         {
             if (Type.IsValueType)
             {
-                return Expression.Convert(Target.GetExpression(), Type);
+                var exp = Target.GetExpression();
+                try
+                {
+                    return Expression.Convert(exp, Type);
+                }
+                catch
+                {
+                    return exp;
+                }
             }
             else
             {

@@ -17,6 +17,7 @@ namespace MagicExpression.Inner
         public NodeData? Parent { get; set; }
         public string OrginalStr { get; }
         public int OrignalIndex { get; }
+        public NodeData Root { get; set; }
         public abstract Expression GetExpression();
     }
 }

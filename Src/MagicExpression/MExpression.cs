@@ -13,10 +13,12 @@ namespace MagicExpression
     {
 
         /// <summary>
-        /// 匹配 字符串、true、false、null、is、is not、as、.[Property]、{\d}
+        /// 匹配 字符串、true、false、null、is、is not、as、System.Linq.Enumerable 拓展方法、.[Property]/.[Method()]、{\d}
         /// </summary>
-        private static Regex regex = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?|(\\.\\s*[_|a-z|A-Z]\\w*)|{-?\\d+}");
-        private static Regex constNumberRegex = new Regex("((\\d+\\.?\\d*)|(\\d*\\.\\d+))((d|f|m|ul|lu|l|u)?)", RegexOptions.IgnoreCase);
+        private static Regex regex = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?|(\\.\\s*[_|a-z|A-Z]\\w*\\s*(\\(\\s*\\))?)|{-?\\d+}");
+        private static Regex constNumberRegex = new Regex("(?<!\\w)((\\d+\\.?\\d*)|(\\d*\\.\\d+))((d|f|m|ul|lu|l|u)?)(?!\\w)", RegexOptions.IgnoreCase);
+        private static Regex regexVariableNameDefine = new Regex(@"^\s+[_|a-z|A-Z]\w*");
+        private static Regex regexVariableNameCheck = new Regex(@"[_|a-z|A-Z]\w*");
         private List<Match> matchsList;
         private List<Match> matchsNumList;
         private readonly NodeBracket root;
@@ -25,6 +27,15 @@ namespace MagicExpression
         private readonly List<NodeOperatorType> typeOperatorNodes = new List<NodeOperatorType>();
         private readonly List<NodeOperatorType> hasVariableTypeNode = new List<NodeOperatorType>();
         public IReadOnlyList<int> ArgsIndexs{get;private set;}
+
+        //static MExpression()
+        //{
+        //    var exMethods = string.Join("",typeof(System.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
+        //        .Where(t=>t.GetParameters()?.Length==1)
+        //        .Select(t => t.Name).Distinct().Select(t => $"|(\\.\\s*{t}\\s*\\(\\s*\\))"));
+        //    //  = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?|(\\.\\s*[_|a-z|A-Z]\\w*)|{-?\\d+}")
+        //    //regex = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?" + exMethods + "|(\\.\\s*[_|a-z|A-Z]\\w*)|{-?\\d+}");
+        //}
 
         public MExpression(string expressionStr)
         {
@@ -58,15 +69,18 @@ namespace MagicExpression
             var dicVariableNames = new Dictionary<int, NodeOperatorType>();
             Stack<NodeBracket> bracketNotClosedStack = new Stack<NodeBracket>();
             Stack<NodeBracket> arrowBracketNotClosedStack = new Stack<NodeBracket>();// 尖括弧
+            KeyValuePair<int, int>? mayVarialbe = null;
             str ??= nodeBracket.OrginalStr[1..^1];
             var stackTop = nodeBracket;
             for (var i = 0; i < str.Length; i++)
             {
                 if (dicStrs.ContainsKey(i))
                 {
+                    processMayVarialbe(stackTop);
                     processArrowAsLessThan();
                     var match = dicStrs[i];
                     var upVal = match.Value;
+                    var exLen = 0;
                     switch (upVal)
                     {
                         case "true":
@@ -81,10 +95,30 @@ namespace MagicExpression
                         case "is":
                         case "as":
                             var typeName = parseType(str, match.Index + match.Length, out int len);
-                            i += len;
-                            var typeOperator = new NodeOperatorType(upVal, typeName, str.Substring(match.Index, match.Length + len), match.Index);
+                            exLen += len;
+                            string? varName = null;
+                            if (upVal == "is")
+                            {
+                                var tmp = parseVariableName(str, match.Index + match.Length+exLen, out len);
+                                if (tmp != null && len > 0)
+                                {
+                                    varName= tmp;
+                                    exLen += len;
+                                }
+                            }
+                            var typeOperator = new NodeOperatorType(upVal, typeName, str.Substring(match.Index, match.Length+exLen), match.Index) {
+                                VariableName = varName
+                            };
                             stackTop.AddNode(typeOperator);
                             typeOperatorNodes.Add(typeOperator);
+                            if (varName?.Length > 0)
+                            {
+                                var bracket = bracketNotClosedStack.Pop();
+                                bracket.AddNode(new NodeVariable(typeOperator, i));
+                                bracketNotClosedStack.Push(bracket);
+                                hasVariableTypeNode.Add(typeOperator);
+                            }
+
                             break;
                         case "?":
                             stackTop.AddNode(new NodeOperatorTernary("?", match.Value, i));
@@ -96,10 +130,30 @@ namespace MagicExpression
                             if (upVal.StartsWith("is ") && upVal.Replace(" ", "") == "isnot")// is not
                             {
                                 typeName = parseType(str, match.Index + match.Length, out len);
-                                i += len;
-                                typeOperator = new NodeOperatorType("isnot", typeName, str.Substring(match.Index, match.Length + len), match.Index);
+                                exLen+=len; 
+                                varName = null;
+                                {
+                                    var tmp = parseVariableName(str, match.Index + match.Length + exLen, out len);
+                                    if (tmp != null && len > 0)
+                                    {
+                                        varName = tmp;
+                                        exLen+= len;
+                                    }
+                                }
+                                typeOperator = new NodeOperatorType("isnot", typeName, str.Substring(match.Index, match.Length+exLen), match.Index)
+                                {
+                                    VariableName = varName
+                                };
                                 stackTop.AddNode(typeOperator);
                                 typeOperatorNodes.Add(typeOperator);
+                                if(varName?.Length > 0)
+                                {
+                                    var bracket = bracketNotClosedStack.Pop();
+                                    bracket.AddNode(new NodeVariable(typeOperator, i));
+                                    bracketNotClosedStack.Push(bracket);
+                                    hasVariableTypeNode.Add(typeOperator);
+                                }
+                                
                             }
                             else if (upVal[0] == '\"')//string
                             {
@@ -114,8 +168,16 @@ namespace MagicExpression
                                 stackTop.AddNode(paramNode);
                             }
                             else if (upVal[0] == '.' && (upVal[1] == ' ' || upVal[1] == '_' || (upVal[1] >= 'a' && upVal[1] <= 'z') || (upVal[1] >= 'A' && upVal[1] <= 'Z')))
-                            {//.Property
-                                stackTop.AddNode(new NodeOperatorAccess(match.Value.Trim(' ', '.'), match.Value, i));
+                            {
+                                if (match.Value.Replace(" ","").EndsWith("()"))
+                                {//Method()
+                                    stackTop.AddNode(new NodeCallMethod(match.Value, i));
+                                }
+                                else
+                                {
+                                    //.Property
+                                    stackTop.AddNode(new NodeOperatorAccess(match.Value, i));
+                                }
                             }
                             else//num
                             {
@@ -123,28 +185,34 @@ namespace MagicExpression
                             }
                             break;
                     }
-                    i += match.Length - 1;
+                    i += match.Length+exLen - 1;
                     continue;
                 }
-                if (dicVariableNames.ContainsKey(i))
-                {
-                    var isType = dicVariableNames[i];
-                    stackTop.AddNode(new NodeVariable(isType, i));
-                    i += isType.VariableName.Length - 1;
-                    continue;
-                }
+                //if (dicVariableNames.ContainsKey(i))
+                //{
+                //    processMayVarialbe(stackTop);
+                //    var isType = dicVariableNames[i];
+                //    var varible = new NodeVariable(isType, i);
+                //  //  root.Variables.Add(varible);
+                //    stackTop.AddNode(varible);
+                //    i += isType.VariableName.Length - 1;
+                //    continue;
+                //}
 
                 switch (str[i])
                 {
                     case ' ':
+                        processMayVarialbe(stackTop);
                         continue;
                     case '(':
+                        processMayVarialbe(stackTop);
                         processArrowAsLessThan();
                         NodeBracket notClosed = new NodeBracket(null!, i) { Parent = stackTop };
                         bracketNotClosedStack.Push(notClosed);
                         stackTop = notClosed;
                         break;
                     case ')':
+                        processMayVarialbe(stackTop);
                         if (bracketNotClosedStack.Count > 0)
                         {
                             notClosed = bracketNotClosedStack.Pop();
@@ -190,6 +258,7 @@ namespace MagicExpression
                         }
                         break;
                     case '!':
+                        processMayVarialbe(stackTop);
                         processArrowAsLessThan();
                         if (str[i + 1] == '=')
                         {
@@ -200,10 +269,12 @@ namespace MagicExpression
                             stackTop.AddNode(new NodeOperatorSingle("!", i));
                         break;
                     case '~':
+                        processMayVarialbe(stackTop);
                         processArrowAsLessThan();
                         stackTop.AddNode(new NodeOperatorSingle("~", i));
                         break;
                     case '<':
+                        processMayVarialbe(stackTop);
                         if (str[i + 1] == '<' || str[i + 1] == '=')
                         {
                             processArrowAsLessThan();
@@ -216,6 +287,7 @@ namespace MagicExpression
                         }
                         break;
                     case '>':
+                        processMayVarialbe(stackTop);
                         if (str[i + 1] == '>' || str[i + 1] == '=')
                         {
                             processArrowAsLessThan();
@@ -233,12 +305,14 @@ namespace MagicExpression
                         break;
                     case ':':
                         processArrowAsLessThan();
+                        processMayVarialbe(stackTop);
                         stackTop.AddNode(new NodeOperatorDouble(":", i));// 为三目运算准备
                         break;
                     default:
                         if (opretorChars.Contains(str[i]))
                         {
                             processArrowAsLessThan();
+                            processMayVarialbe(stackTop);
                             var opt = new StringBuilder();
                             opt.Append(str[i]);
                             if (opretorChars.Contains(str[i + 1]))
@@ -250,6 +324,18 @@ namespace MagicExpression
                         }
                         else
                         {
+                            var iBefore = i - 1;
+                            if (mayVarialbe.HasValue)
+                            {
+                                if (mayVarialbe.Value.Value == iBefore)
+                                {
+                                    mayVarialbe = new KeyValuePair<int, int>(mayVarialbe.Value.Key,i);
+                                }
+                            }
+                            else
+                            {
+                                mayVarialbe =new KeyValuePair<int, int>(i,i);
+                            }
                         }
                         break;
                 }
@@ -267,6 +353,24 @@ namespace MagicExpression
                     var arrowBracket = arrowBracketNotClosedStack.Pop();
                     stackTop.AddNode(new NodeOperatorDouble("<", arrowBracket.OrignalIndex));
                 }
+            }
+
+            void processMayVarialbe(NodeBracket stackTop)
+            {
+                if (mayVarialbe.HasValue)
+                {
+                    var s = mayVarialbe.Value.Key;
+                    var len = mayVarialbe.Value.Value - s + 1;
+                    var tmp = str.Substring(s, len);
+                  //  dicVariableNames
+                    foreach (Match match in regexVariableNameCheck.Matches(tmp))
+                    {
+                        var targetNode = typeOperatorNodes.FirstOrDefault(t => t.VariableName == match.Value);
+                        if (targetNode != null)
+                            stackTop.AddNode(new NodeVariable(targetNode, s));
+                    }
+                }
+                mayVarialbe = null;
             }
         }
         private void toTree(NodeBracket nodeBracket)
@@ -302,6 +406,11 @@ namespace MagicExpression
             {
                 switch (nodeBracket.NodeDatas[i])
                 {
+                    case NodeCallMethod call:
+                        call.Target = nodeBracket.NodeDatas[i - 1];
+                        nodeBracket.NodeDatas.RemoveAt(i - 1);
+                        i--;
+                        break;
                     case NodeOperatorAccess access:
                         access.Target = nodeBracket.NodeDatas[i - 1];
                         nodeBracket.NodeDatas.RemoveAt(i - 1);
@@ -403,6 +512,19 @@ namespace MagicExpression
             }
             len = match.Length;
             return strTypeName;
+        }
+
+        private string? parseVariableName(string str, int i, out int len)
+        {
+            len = 0;
+            var tmp = str[i..];
+            var match = regexVariableNameDefine.Match(tmp);
+            if (match?.Success == true)
+            {
+                len = match.Index + match.Length;
+                return match.Value.Trim();
+            }
+            return null;
         }
 
         private object stringToNumConst(string value)

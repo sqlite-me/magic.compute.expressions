@@ -10,16 +10,17 @@ namespace MagicExpression.Inner
         public NodeBracket(string orginalStr, int orignalIndex)
             : base(NodeType.Bracket, orginalStr, orignalIndex)
         {
-
         }
         public int Start => OrignalIndex;
         public int Length => OrginalStr.Length;
         public List<NodeBracket> BracketNodes { get; } = new List<NodeBracket>();
         public bool Closed => Length > 0;
         public List<NodeData> NodeDatas { get; } = new List<NodeData>();
+
         public void AddNode(NodeData nodeData)
         {
             nodeData.Parent = this;
+            nodeData.Root = this.Root;
             NodeDatas.Add(nodeData);
         }
         public void AddBracketNode(NodeBracket nodeBracket)
