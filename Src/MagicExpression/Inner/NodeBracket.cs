@@ -20,7 +20,6 @@ namespace MagicExpression.Inner
         public void AddNode(NodeData nodeData)
         {
             nodeData.Parent = this;
-            nodeData.Root = this.Root;
             NodeDatas.Add(nodeData);
         }
         public void AddBracketNode(NodeBracket nodeBracket)

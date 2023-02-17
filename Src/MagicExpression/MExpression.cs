@@ -28,15 +28,6 @@ namespace MagicExpression
         private readonly List<NodeOperatorType> hasVariableTypeNode = new List<NodeOperatorType>();
         public IReadOnlyList<int> ArgsIndexs{get;private set;}
 
-        //static MExpression()
-        //{
-        //    var exMethods = string.Join("",typeof(System.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
-        //        .Where(t=>t.GetParameters()?.Length==1)
-        //        .Select(t => t.Name).Distinct().Select(t => $"|(\\.\\s*{t}\\s*\\(\\s*\\))"));
-        //    //  = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?|(\\.\\s*[_|a-z|A-Z]\\w*)|{-?\\d+}")
-        //    //regex = new Regex("(?<!\\\\)\".*?(?<!\\\\)\"|true|false|null|is\\s+not|is|as|\\?\\?|\\?" + exMethods + "|(\\.\\s*[_|a-z|A-Z]\\w*)|{-?\\d+}");
-        //}
-
         public MExpression(string expressionStr)
         {
             matchsList = regex.Matches(expressionStr).ToList();
@@ -152,7 +143,7 @@ namespace MagicExpression
                                     bracket.AddNode(new NodeVariable(typeOperator, i));
                                     bracketNotClosedStack.Push(bracket);
                                     hasVariableTypeNode.Add(typeOperator);
-                                }
+                            }
                                 
                             }
                             else if (upVal[0] == '\"')//string
