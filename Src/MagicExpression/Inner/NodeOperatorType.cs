@@ -51,12 +51,40 @@ namespace MagicExpression.Inner
                     expression = Expression.IsFalse(GetTypeIsExpression());
                     break;
                 case "()":
-                    expression = Expression.Convert(Target.GetExpression(), Type);
+                    var paraExp = Target.GetExpression();
+                    try
+                    {
+                        expression = Expression.Convert(paraExp, Type);
+                    }
+                    catch
+                    {
+                        var method = getConvert(paraExp.Type,Type,out Type needConvert);
+                        if (method == null) throw;
+                        if (needConvert!=null)
+                        {
+                            paraExp = Expression.Convert(paraExp, needConvert);
+                        }
+                        expression = Expression.Call(method,paraExp);
+                    }
                     break;
                 default:
                     throw new NotImplementedException();
             }
             return expression;
+        }
+
+        private MethodInfo getConvert(Type fromType, Type toType,out Type? paramConvertTo)
+        {
+            paramConvertTo = null;
+            var methods=typeof(Convert).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.ReturnType == toType && m.GetParameters()?.Length == 1);
+            var method = methods.FirstOrDefault(m => m.GetParameters()[0].ParameterType == fromType);
+            if (method != null) return method;
+
+            var type=
+            paramConvertTo = typeof(object);
+            method = methods.FirstOrDefault(m => m.GetParameters()[0].ParameterType == type);
+            return method;
         }
 
         public Expression GetValueExpresson()
