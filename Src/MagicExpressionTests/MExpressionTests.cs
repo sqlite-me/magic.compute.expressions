@@ -194,6 +194,28 @@ namespace MagicExpression.Tests
             @delegate = mExp.GetDelegate(new object[] { timeNow, timeDate }, out args);
             rlt = @delegate.DynamicInvoke(args);
             Assert.AreEqual(rlt, timeNow);
+
+            var exp = "(({0} is DateTime preEnd)&&({1} is DateTime preEsEnd)&&({2} is DateTime start)&&({3} is double scale))?" +
+                "(" +
+                "((start-(preEnd,preEsEnd).Max()).TotalSeconds is double timeDiff)?(timeDiff * scale):0d" +
+                ")" +
+                ":0d";
+
+            mExp = new MExpression(exp);
+            @delegate = mExp.GetDelegate(new object[] { timeNow, timeNow.AddSeconds(1), timeNow.AddSeconds(2), 0.1d }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 0.2);
+
+            var exp = "(({0} is DateTime preEnd)&&({1} is DateTime preEsEnd)&&({2} is DateTime start)&&({3} is double scale))?" +
+                "(" +
+                "((start-(preEnd,preEsEnd).Max()).TotalSeconds is double timeDiff)?(timeDiff * scale):0d" +
+                ")" +
+                ":0d";
+
+            mExp = new MExpression(exp);
+            @delegate = mExp.GetDelegate(new object[] { timeNow, timeNow.AddSeconds(1), timeNow.AddSeconds(2),0.1d }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 0.2);
         }
     }
 }
