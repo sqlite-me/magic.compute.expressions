@@ -202,7 +202,7 @@ namespace MagicExpression.Tests
             Assert.AreEqual(rlt, true);
 
 
-        Lable: timeNow = DateTime.Now;
+        //Lable: timeNow = DateTime.Now;
             mExp = new MExpression("({0} is DateTime dt &&(dt- {1}).TotalSeconds> 0)? true:false");
             @delegate = mExp.GetDelegate(new object[] { timeNow, timeNow.AddSeconds(1), timeNow.AddSeconds(2), 0.1d }, out args);
             rlt = @delegate.DynamicInvoke(args);
@@ -224,6 +224,12 @@ namespace MagicExpression.Tests
             @delegate = mExp.GetDelegate(new object[] { "123456"}, out args);
             rlt = @delegate.DynamicInvoke(args);
             Assert.AreEqual(rlt, 6);
+
+        Lable: timeNow = DateTime.Now;
+            mExp = new MExpression("(({0} is DateTime start)&&({1} is DateTime end)&&({2} is DateTime esEnd)&&({3} is double scale))?(([end,esEnd].Max()-start).TotalSeconds * scale):0.1d");
+            @delegate = mExp.GetDelegate(new object[] {timeNow, timeNow .AddSeconds(5),timeNow.AddSeconds(2),.3d}, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 1.5d);
         }
 
         private object callNew(string exp, object[] args)

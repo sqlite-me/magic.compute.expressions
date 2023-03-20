@@ -234,26 +234,29 @@ namespace MagicExpression
                             if (_notComplateNodeStack.Count > 1)
                             {
                                 var node = _notComplateNodeStack[_notComplateNodeStack.Count - 2];
-                                switch (node)
+                                if (node.ExpClosed)
                                 {
-                                    case NodeBracket _:
-                                    case NodeConst _:
-                                    case NodeOperatorAccess _:
-                                    case NodeParam _:
-                                    case NodeVariable _:
-                                        NodeOperatorAccess aNodeNew;
-                                        _notComplateNodeStack[_notComplateNodeStack.Count - 2] = aNodeNew =
-                                            new NodeCallMethod(_expressionStr, node.StartIndex, i + word.Length - 1)
-                                            {
-                                                KeyWord = "[]",
-                                                Target = node,
-                                            };
-                                        bracket.SetExpClosed();
-                                        aNodeNew.Params = bracket.NodeDatas.ToArray();
-                                        _notComplateNodeStack.RemoveAt(_notComplateNodeStack.Count - 1);
-                                        aNodeNew.ExpClosed = true;
-                                        bracket = null;
-                                        break;
+                                    switch (node)
+                                    {
+                                        case NodeBracket _:
+                                        case NodeConst _:
+                                        case NodeOperatorAccess _:
+                                        case NodeParam _:
+                                        case NodeVariable _:
+                                            NodeOperatorAccess aNodeNew;
+                                            _notComplateNodeStack[_notComplateNodeStack.Count - 2] = aNodeNew =
+                                                new NodeCallMethod(_expressionStr, node.StartIndex, i + word.Length - 1)
+                                                {
+                                                    KeyWord = "[]",
+                                                    Target = node,
+                                                };
+                                            bracket.SetExpClosed();
+                                            aNodeNew.Params = bracket.NodeDatas.ToArray();
+                                            _notComplateNodeStack.RemoveAt(_notComplateNodeStack.Count - 1);
+                                            aNodeNew.ExpClosed = true;
+                                            bracket = null;
+                                            break;
+                                    }
                                 }
                             }
 

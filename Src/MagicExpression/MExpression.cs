@@ -20,6 +20,7 @@ namespace MagicExpression
         private readonly Param[] _usedParams;
         private readonly IReadOnlyList<NodeOperatorType> _hasVariableNodes;
         private readonly Dictionary<string, Delegate> dicExistsDelegate = new Dictionary<string, Delegate>();
+        public IReadOnlyList<int> ArgsIndexs { get; }
 
         public MExpression(string expressionStr)
         {
@@ -33,6 +34,7 @@ namespace MagicExpression
             _root = helper.Root;
             _usedParams= helper.UsedParams.OrderBy(t => t.Index).ToArray();
             _hasVariableNodes= helper.HasVariableNodes;
+            ArgsIndexs= _usedParams.Select(t=>t.Index).ToArray();
         }
 
         public Delegate GetDelegate(IList<object> args, out object[] usedArgs)
