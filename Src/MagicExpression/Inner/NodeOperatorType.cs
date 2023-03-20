@@ -9,17 +9,30 @@ namespace MagicExpression.Inner
 {
     internal class NodeOperatorType : NodeOperator
     {
+        public static readonly string[] OperatorKeys = { "is", "as", "not","("};
+
         private ParameterExpression variableExpression;
         private TypeBinaryExpression typeIsExpresson;
         private Expression valueExpression;
 
-        public NodeOperatorType(string @operator, string typeName, string orginalStr, int orignalIndex)
-            : base(NodeType.Operator_Type, @operator, orginalStr, orignalIndex)
+        public NodeOperatorType(string allExpressoin, int startIndex, int endIndex=-1)
+            : base(allExpressoin, startIndex, endIndex)
         {
+        }
+        public NodeData Target { get; set; }
+        public Type Type => getType();
+        public string VariableName { get; internal set; }
+        public Assembly[] AssemblysMayUsed { get; internal set; }
+        public string TypeName { get; internal set; }
+        public int ArrayBracketCount { get; internal set; }
+        public override bool NodeComplated => base.ExpClosed&&Target!=null;
+        private Type getType()
+        {
+            var typeName = this.TypeName;
             typeName = typeName?.Trim(' ', ')', '(');
             if (string.IsNullOrEmpty(typeName) || typeName.Equals("null", StringComparison.OrdinalIgnoreCase))
             {
-                Type = null;
+                return null;
             }
             else
             {
@@ -28,18 +41,14 @@ namespace MagicExpression.Inner
                 {
                     throw new ApplicationException("not found type " + typeName);
                 }
-                this.Type = type;
+                return type;
             }
         }
-        public NodeData Target { get; set; }
-        public Type Type { get; }
-        public string VariableName { get; internal set; }
-        public Assembly[] AssemblysMayUsed { get; internal set; }
 
         public override Expression GetExpression()
         {
             Expression expression;
-            switch (Operator)
+            switch (KeyWord)
             {
                 case "as":
                     expression = asType();

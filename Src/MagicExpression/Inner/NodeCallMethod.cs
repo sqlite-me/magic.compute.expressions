@@ -9,16 +9,22 @@ using System.Text.RegularExpressions;
 
 namespace MagicExpression.Inner
 {
-    internal class NodeCallMethod : NodeOperator
+    internal class NodeCallMethod : NodeOperatorAccess
     {
-        private static Regex regex = new Regex(@"\w+");
-        public NodeCallMethod(string orginalStr, int orignalIndex) :base(NodeType.CallMethod, regex.Match(orginalStr).Value, orginalStr, orignalIndex)
+        public NodeCallMethod(string allExpressoin, int startIndex, int endIndex=-1) :base(allExpressoin, startIndex, endIndex)
         {
         }
 
-        public NodeData Target { get; set; }
+        public override bool NodeComplated => _nodeComplated;
+        private bool _nodeComplated;
+        public void SetNodeComplated() {
 
-        private Expression t()
+            if (Target == null) throw new Exception(nameof(Target) + " can not be null");
+            if (string.IsNullOrWhiteSpace(KeyWord)) throw new Exception(nameof(KeyWord) + " can not be empty");
+
+            _nodeComplated = true;
+        }
+        private Expression getTargetExp()
         {
             Expression expression;
             switch (Target)
@@ -58,38 +64,51 @@ namespace MagicExpression.Inner
                     expression = Target.GetExpression();
                     break;
             }
-
-
             return expression;
+        }
+
+        private List<Expression> getParamExp() {
+        List<Expression> expArray = new List<Expression>();
+            if(Params?.Length > 0)
+            {
+                foreach (var param in Params)
+                {
+                    expArray.Add(param.GetExpression());
+                }
+            }
+            return expArray;
         }
 
         public override Expression GetExpression()
         {
-            var exp = t();
-            var method= exp.Type.GetMethod(base.Operator,new Type[0]);
+            var targetExp = getTargetExp();
+            var paramExps = getParamExp();
+            var paramTypes= paramExps.Select(t=>t.Type).ToArray();
+            var method= targetExp.Type.GetMethod(base.KeyWord, paramTypes);
             if(method != null&&!method.IsStatic)
             {
-                return Expression.Call(exp,method);
+                return Expression.Call(targetExp,method);
             }
             Type elementType;
-            if (exp.Type.IsArray)
+            if (targetExp.Type.IsArray)
             {
-                elementType = exp.Type.GetElementType();
+                elementType = targetExp.Type.GetElementType();
             }
-            else if (exp.Type.IsGenericType)
+            else if (targetExp.Type.IsGenericType)
             {
-                elementType = exp.Type.GenericTypeArguments[0];
+                elementType = targetExp.Type.GenericTypeArguments[0];
             }
             else
             {
-                throw new MethodAccessException("not found method " + base.Operator);
+                throw new MethodAccessException("not found method " + base.KeyWord);
             }
 
-            method = typeof(System.Linq.Enumerable).GetMethod(base.Operator, new Type[] { typeof(IEnumerable<>).MakeGenericType(elementType) });
+            paramTypes = new Type[] { typeof(IEnumerable<>).MakeGenericType(elementType) }.Concat(paramTypes).ToArray();
+            method = typeof(System.Linq.Enumerable).GetMethod(base.KeyWord, paramTypes);
             if (method == null)
             {
                 var methods = typeof(System.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .Where(t => t.Name == base.Operator&&t.GetParameters()?.Length==1).ToArray();
+                    .Where(t => t.Name == base.KeyWord&&t.GetParameters()?.Length== paramTypes.Length).ToArray();
 
                 method = methods.FirstOrDefault(t=> elementType.IsSubclassOf(t.GetParameters()[0].ParameterType) || elementType == t.GetParameters()[0].ParameterType);
                 if (method == null)
@@ -100,10 +119,11 @@ namespace MagicExpression.Inner
             }
             if (method == null)
             {
-                throw new MethodAccessException("not found method " + base.Operator);
+                throw new MethodAccessException("not found method " + base.KeyWord);
             }
             //return Expression.Call(methodInfo,expressionBody);
-            return Expression.Call(method,exp);
+            paramExps.Insert(0, targetExp);
+            return Expression.Call(method, paramExps);
         }
     }
 }

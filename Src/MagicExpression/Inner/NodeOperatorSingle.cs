@@ -7,17 +7,18 @@ namespace MagicExpression.Inner
 {
     internal class NodeOperatorSingle : NodeOperator
     {
-        public NodeOperatorSingle(string @operator, int orignalIndex)
-            : base(NodeType.Operator_Single, @operator, @operator, orignalIndex)
+        public static readonly char[] opretorChars = { '!', '~'};
+        public NodeOperatorSingle(string allExpressoin, int startIndex)
+            : base(allExpressoin, startIndex)
         {
         }
 
         public NodeData Target { get; set; }
-
+        public override bool NodeComplated => Target != null;
         public override Expression GetExpression()
         {
             Expression expression;
-            switch (Operator)
+            switch (KeyWord)
             {
                 case "!":
                     expression = Expression.IsFalse(Target.GetExpression());
@@ -26,7 +27,7 @@ namespace MagicExpression.Inner
                     expression = Expression.Not(Target.GetExpression());
                     break;
                 default:
-                    throw new NotImplementedException(Operator);
+                    throw new NotImplementedException(KeyWord);
             }
             return expression;
         }

@@ -6,6 +6,7 @@ namespace MagicExpression.Inner
 {
     internal enum NodeType
     {
+        Unkonw,
         Const,
         Param,
         Variable,

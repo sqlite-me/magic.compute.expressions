@@ -6,12 +6,9 @@ namespace MagicExpression.Inner
 {
     internal abstract class NodeOperator : NodeData
     {
-        public NodeOperator(NodeType nodeType, string @operator, string orginalStr, int orignalIndex)
-            : base(nodeType, orginalStr, orignalIndex)
+        public NodeOperator(string allExpressoin, int startIndex, int endIndex=-1)
+            : base( allExpressoin, startIndex, endIndex)
         {
-            this.Operator = @operator;
         }
-
-        public string Operator { get; }
     }
 }

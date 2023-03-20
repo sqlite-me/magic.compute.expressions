@@ -7,8 +7,8 @@ namespace MagicExpression.Inner
 {
     internal class NodeOperatorTernary : NodeOperator
     {
-        public NodeOperatorTernary(string @operator, string orginalStr, int orignalIndex)
-            : base(NodeType.Operator_Ternary, @operator, orginalStr, orignalIndex)
+        public NodeOperatorTernary(string allExpressoin, int startIndex, int endIndex=-1)
+            : base(allExpressoin, startIndex, endIndex)
         {
         }
 
@@ -16,7 +16,7 @@ namespace MagicExpression.Inner
         public NodeData First { get; set; }
         public NodeData Second { get; set; }
         public NodeData Third { get; set; }
-
+        public override bool NodeComplated => First != null && Second != null && Third != null;
         public override Expression GetExpression()
         {
             var condition = First.GetExpression();
