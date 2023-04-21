@@ -21,7 +21,7 @@ namespace MagicExpression.Tests
         {
             var expStr = "{0} is not System.Int32";
             var args = new object[] { 1 };
-            //goto Lable;
+          //  goto Lable;
             var rlt = call(expStr, args);
             Assert.AreEqual(rlt, false);
 
@@ -224,12 +224,19 @@ namespace MagicExpression.Tests
             @delegate = mExp.GetDelegate(new object[] { "123456"}, out args);
             rlt = @delegate.DynamicInvoke(args);
             Assert.AreEqual(rlt, 6);
-
-        Lable: timeNow = DateTime.Now;
+ timeNow = DateTime.Now;
             mExp = new MExpression("(({0} is DateTime start)&&({1} is DateTime end)&&({2} is DateTime esEnd)&&({3} is double scale))?(([end,esEnd].Max()-start).TotalSeconds * scale):0.1d");
             @delegate = mExp.GetDelegate(new object[] {timeNow, timeNow .AddSeconds(5),timeNow.AddSeconds(2),.3d}, out args);
             rlt = @delegate.DynamicInvoke(args);
             Assert.AreEqual(rlt, 1.5d);
+
+        Lable:
+            mExp = new MExpression("({0} is int leve) ? leve*3d : 0");
+            @delegate = mExp.GetDelegate(new object[] { 5 }, out args);
+            rlt = @delegate.DynamicInvoke(args);
+            Assert.AreEqual(rlt, 15d);
+
+
         }
 
         private object callNew(string exp, object[] args)
@@ -240,11 +247,6 @@ namespace MagicExpression.Tests
         [TestMethod()]
         public void MExpressionTest()
         {
-            var array = Expression.Constant(new List<string> { "13456","1","abc" });
-            var prr= typeof(string).GetProperties();
-            prr = typeof(Dictionary<int,string>).GetProperties();
-            var body= Expression.ArrayAccess(array, Expression.Constant(2));
-            var rrrr = Expression.Lambda(body).Compile().DynamicInvoke();
             var expStr = "{0} is not System.Int32";
             var args = new object[] { 1 };
             //goto E5;
@@ -322,7 +324,7 @@ namespace MagicExpression.Tests
             mExp = new MExpression("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:[t1,t2].Max()");
 
             E5:
-            mExp = new MExpression("({0} is DateTime dt && dt.TotalSeconds> 0)? true:fase");
+            mExp = new MExpression("({0} is DateTime dt && dt.TotalSeconds> 0)? true:false");
 
             var exp = "(({0} is DateTime preEnd)&&({1} is DateTime preEsEnd)&&({2} is DateTime start)&&({3} is double scale))?" +
                 "(" +

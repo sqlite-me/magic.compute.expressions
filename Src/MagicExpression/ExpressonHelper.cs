@@ -373,7 +373,8 @@ namespace MagicExpression
                                 {
                                     bareck.AddNode(item);
                                 }
-                                ter.Second = bareck;
+                                bareck.SetExpClosed();
+                                ter.Second = bareck.NodeDatas[0];
                             }
                         }
                     }
