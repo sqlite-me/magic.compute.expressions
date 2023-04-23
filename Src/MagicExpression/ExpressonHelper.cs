@@ -82,7 +82,7 @@ namespace MagicExpression
 
         public void Parse()
         {
-            Trace.WriteLine(_expressionStr);
+            //Trace.WriteLine(_expressionStr);
             string word;
             for (var i = 0; i < _expressionStr.Length; i += word.Length)
             {
@@ -96,7 +96,7 @@ namespace MagicExpression
                 }
             }
 
-            Trace.WriteLine(_expressionStr);
+            //Trace.WriteLine(_expressionStr);
 
             var root = _notComplateNodeStack[0];
             if(_notComplateNodeStack.Count>1)
