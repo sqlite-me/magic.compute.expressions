@@ -87,7 +87,7 @@ namespace MagicExpression.Inner
             var method= targetExp.Type.GetMethod(base.KeyWord, paramTypes);
             if(method != null&&!method.IsStatic)
             {
-                return Expression.Call(targetExp,method);
+                return Expression.Call(targetExp,method,paramExps.ToArray());
             }
             Type elementType;
             if (targetExp.Type.IsArray)

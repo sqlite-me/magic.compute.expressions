@@ -9,4 +9,8 @@
     <Compile Remove="Inner\NodeType.cs" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if EXIST &quot;$(SolutionDir)affterBuild.bat&quot; (&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.dll&quot;&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.pdb&quot;&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.xml&quot;&#xD;&#xA;)" />
+  </Target>
+
 </Project>

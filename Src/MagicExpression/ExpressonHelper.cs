@@ -13,7 +13,7 @@ namespace MagicExpression
         /// <summary>
         /// string | digit(int|double|flot...) | other word [a-z|A-Z|_|0_9]
         /// </summary>
-        private static readonly Regex s_regexWord = new Regex("((?<!\\\\)\".*?(?<!\\\\)\"|(?<!\\w)((\\d+\\.?\\d*)|(\\d*\\.\\d+))((d|f|m|ul|lu|l|u)?)(?!\\w)|\\b\\w+\\b)", RegexOptions.IgnoreCase);
+        private static readonly Regex s_regexWord = new Regex("((?<!\\\\)\".*?(?<!\\\\)\"|(?<!\\w)((\\d+\\.?\\d*)|(\\d*\\.\\d+))((d|f|m|ul|lu|l|u)?)(?!\\w)|\\b\\w+\\b)|('.')", RegexOptions.IgnoreCase);
         private static readonly Regex s_regexNum = new Regex(@"\d+");
         private readonly string _expressionStr;
         private readonly Dictionary<int, string> _dicRegexWords;
@@ -450,6 +450,11 @@ namespace MagicExpression
                     if (word[0] == '"')// string
                     {
                         _notComplateNodeStack.Add(new NodeConst(word.Trim('"'), _expressionStr, i, i + word.Length - 1)); break;
+                    }
+                    else if ((word.Length == 3 && word[0] == '\'' && word[2] == '\''))// char
+                    {
+                        _notComplateNodeStack.Add(new NodeConst(word[1], _expressionStr, i, i + word.Length - 1));
+                        break;
                     }
                     else
                     {
