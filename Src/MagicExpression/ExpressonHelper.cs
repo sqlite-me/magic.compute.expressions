@@ -245,9 +245,16 @@ namespace MagicExpression
                                         case NodeVariable _:
                                             NodeOperatorAccess aNodeNew;
                                             _notComplateNodeStack[_notComplateNodeStack.Count - 2] = aNodeNew =
+                                                bracket.NodeDatas?.Count == 1 ?
+                                                new NodeOperatorAccess(_expressionStr, node.StartIndex, i + word.Length - 1)
+                                                {
+                                                    KeyWord = bracket.KeyWord,
+                                                    Target = node,
+                                                }
+                                                :
                                                 new NodeCallMethod(_expressionStr, node.StartIndex, i + word.Length - 1)
                                                 {
-                                                    KeyWord = "[]",
+                                                    KeyWord = bracket.KeyWord,
                                                     Target = node,
                                                 };
                                             bracket.SetExpClosed();
