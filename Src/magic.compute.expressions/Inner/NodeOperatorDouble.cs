@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace MagicExpression.Inner
+namespace magic.compute.expressions.Inner
 {
     internal class NodeOperatorDouble : NodeOperator
     {

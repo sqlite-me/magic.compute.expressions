@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MagicExpression
+namespace magic.compute.expressions
 {
     public class ExceptionErrorException : Exception
     {

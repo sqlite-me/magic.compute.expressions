@@ -2,3 +2,4 @@
 Src/.vs/
 *bin/
 *obj/
+/Src/affterBuild.bat

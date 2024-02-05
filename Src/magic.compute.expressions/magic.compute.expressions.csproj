@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageId>magic.compute.expressions</PackageId>
+		<Version>1.0.0.2</Version>
+		<PackageTags>dotnet C# compute expresion</PackageTags>
+		<Description>
+			This library is a .net tool for convert string expresion to Delegate, and return one value.
+			using like :
+			var exp = new MExpression("{0} > {1} ? {0} - {1} : {1} - {0}");
+			var @delegate = exp.GetDelegate(new object[]{ 15, 20 },out object[] usedArgs);
+			var result = @delegate.DynamicInvoke(usedArgs);
+		</Description>
+	</PropertyGroup>
+
+
+
+	<ItemGroup>
+		<Compile Remove="Inner\NodeType.cs" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="if EXIST &quot;$(SolutionDir)affterBuild.bat&quot; (&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.dll&quot;&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.pdb&quot;&#xD;&#xA;   &quot;$(SolutionDir)affterBuild.bat&quot; &quot;$(ProjectDir)$(OutDir)*.xml&quot;&#xD;&#xA;)" />
+	</Target>
+
+</Project>

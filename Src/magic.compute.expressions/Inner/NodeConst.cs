@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace MagicExpression.Inner
+namespace magic.compute.expressions.Inner
 {
     internal class NodeConst : NodeData
     {
