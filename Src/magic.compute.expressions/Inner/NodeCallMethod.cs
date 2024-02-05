@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MagicExpression.Inner
+namespace magic.compute.expressions.Inner
 {
     internal class NodeCallMethod : NodeOperatorAccess
     {

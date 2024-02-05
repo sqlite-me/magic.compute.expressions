@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MagicExpression\MagicExpression.csproj" />
+    <ProjectReference Include="..\magic.compute.expressions\magic.compute.expressions.csproj" />
   </ItemGroup>
 
 </Project>

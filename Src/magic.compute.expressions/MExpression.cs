@@ -5,13 +5,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Text;
-using MagicExpression.Inner;
+using magic.compute.expressions.Inner;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace MagicExpression
+namespace magic.compute.expressions
 {
     public class MExpression
     {

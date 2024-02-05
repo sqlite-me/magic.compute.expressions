@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Xml.Linq;
 
-namespace MagicExpression.Inner
+namespace magic.compute.expressions.Inner
 {
     internal class NodeBracket : NodeData
     {

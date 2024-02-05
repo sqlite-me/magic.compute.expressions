@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MagicExpression.Inner
+namespace magic.compute.expressions.Inner
 {
     internal class NodeParam : NodeData
     {

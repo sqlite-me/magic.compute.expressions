@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq.Expressions;
+using magic.compute.expressions;
 
 namespace MagicExpression.Tests
 {
