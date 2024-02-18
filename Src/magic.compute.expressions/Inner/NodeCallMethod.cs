@@ -100,7 +100,7 @@ namespace magic.compute.expressions.Inner
             }
             else
             {
-                throw new MethodAccessException("not found method " + base.KeyWord);
+                throw new MethodAccessException($"{base.KeyWord} is not a method for {targetExp.Type.FullName}");
             }
 
             paramTypes = new Type[] { typeof(IEnumerable<>).MakeGenericType(elementType) }.Concat(paramTypes).ToArray();
@@ -119,8 +119,9 @@ namespace magic.compute.expressions.Inner
             }
             if (method == null)
             {
-                throw new MethodAccessException("not found method " + base.KeyWord);
+                throw new MethodAccessException($"{base.KeyWord} is not a extension method for {targetExp.Type.FullName} in System.Linq");
             }
+            
             //return Expression.Call(methodInfo,expressionBody);
             paramExps.Insert(0, targetExp);
             return Expression.Call(method, paramExps);
