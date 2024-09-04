@@ -161,8 +161,12 @@ namespace magic.compute.expressions.Inner
         private Type? getType(string typeName)
         {
             Type? type;
-            switch (typeName.ToLower())
+            switch (typeName)
             {
+                case "bool":
+                case "Boolean":
+                    type = typeof(bool);
+                    break;
                 case "int":
                 case "Int32":
                     type = typeof(int);

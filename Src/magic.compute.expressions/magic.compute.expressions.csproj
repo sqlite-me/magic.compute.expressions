@@ -7,13 +7,14 @@
 
 	<PropertyGroup>
 		<PackageId>magic.compute.expressions</PackageId>
-		<Version>1.0.0.2</Version>
+		<Version>1.0.0.3</Version>
 		<PackageTags>dotnet C# compute expresion</PackageTags>
 		<Authors>sqlite-me</Authors>
 		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/sqlite-me/magic.compute.expressions</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<!--<PackageReadmeFile>../README.md</PackageReadmeFile>-->
 		<Description>
 			This library is a .net tool for convert string expresion to Delegate, and return one value.
 			using like :
