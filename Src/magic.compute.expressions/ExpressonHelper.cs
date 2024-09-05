@@ -14,6 +14,7 @@ namespace magic.compute.expressions
         /// string | digit(int|double|flot...) | other word [a-z|A-Z|_|0_9]
         /// </summary>
         private static readonly Regex s_regexWord = new Regex("((?<!\\\\)\".*?(?<!\\\\)\"|(?<!\\w)((\\d+\\.?\\d*)|(\\d*\\.\\d+))((d|f|m|ul|lu|l|u)?)(?!\\w)|\\b\\w+\\b)|('.')", RegexOptions.IgnoreCase);
+        private static readonly Regex s_assemblyRegex = new Regex(@";\s*assembly\s*=\s*\w+");
         private static readonly Regex s_regexNum = new Regex(@"\d+");
         private readonly string _expressionStr;
         private readonly Dictionary<int, string> _dicRegexWords;
@@ -402,6 +403,20 @@ namespace magic.compute.expressions
                         _notComplateNodeStack.Add(new NodeOperatorAccess(_expressionStr, i) {Target=preNode });
                     }
                     break;
+                case ';':
+                    if(_notComplateNodeStack.LastOrDefault() is NodeOperatorType typeNode)
+                    {
+                        var match = s_assemblyRegex.Match(_expressionStr, i);
+                        if (match.Success)
+                        {
+                            word = match.Value;
+                            typeNode.TypeName += word;
+                            break;
+                        }
+                    }
+                    // unkonw char
+                    throw new ExpressionErrorException(i, word);
+
                 default:
                     if (string.IsNullOrWhiteSpace(word)) break;
                     else if (NodeOperatorDouble.opretorChars.Contains(ch))

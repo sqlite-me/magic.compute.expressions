@@ -17,6 +17,9 @@ namespace MagicExpression.Tests
             var result = @delegate.DynamicInvoke(usedArgs);
             return result;
         }
+
+        public class Test { }
+
         [TestMethod()]
         public void GetDelegateTest()
         {
@@ -105,7 +108,7 @@ namespace MagicExpression.Tests
             expStr = "({0} is DateTime)? ({0} as DateTime).Year: {1}";
             args = new object[] { (object)time, "i an string" };
             rlt = call(expStr, args);
-            Assert.AreEqual(rlt, 2023);
+            Assert.AreEqual(rlt, time.Value.Year);
 
             expStr = "({0} is DateTime)? ({0} as TimeSpan).Days: {1}";
             args = new object[] { (object)(DateTime.Now - DateTime.MinValue), "i an string" };
@@ -129,10 +132,15 @@ namespace MagicExpression.Tests
             Assert.AreEqual(rlt, "yes");
 
 
-            expStr = "({0} is MagicExpression.MExpression ts)? {1}: {2}"; 
+            expStr = "({0} is magic.compute.expressions.MExpression ts)? {1}: {2}"; 
             args = new object[] { (object)(new string[] { "a", "b", "c" }), "yes", "no" };
             rlt = call(expStr, args);
             Assert.AreEqual(rlt, "no");
+
+            expStr = "({0} is magic.compute.expressions.MExpression;assembly=magic.compute.expressions ts)? ts.GetType().FullName: \"error\""; 
+            args = new object[] { new magic.compute.expressions.MExpression("1") };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, typeof(magic.compute.expressions.MExpression).FullName);
 
             var mExp = new MExpression("{0} + {1} * {2} /{3}");
             var @delegate = mExp.GetDelegate(new object[] {12,3,4f,2 }, out args);

@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace magic.compute.expressions.Inner
 {
@@ -228,11 +229,12 @@ namespace magic.compute.expressions.Inner
                     type = typeof(object);
                     break;
                 default:
-                    var arr = typeName.Split(";assembly=");
-                    typeName = arr[0];
-                    if (arr.Length == 2)
+                    var match = Regex.Match(typeName, @"\s*;\s*assembly\s*=\s*");
+                    if (match.Success)
                     {
-                        type = Assembly.Load(arr[1])?.GetType(typeName);
+                        var ass = typeName.Substring(match.Index + match.Length);
+                        typeName = typeName.Substring(0, match.Index);
+                        type = Assembly.Load(ass)?.GetType(typeName);
                     }
                     else if (typeName.Contains('.'))
                     {
