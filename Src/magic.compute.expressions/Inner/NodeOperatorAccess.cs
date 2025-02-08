@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace magic.compute.expressions.Inner
@@ -30,14 +31,46 @@ namespace magic.compute.expressions.Inner
                     {
                         return Expression.ArrayAccess(target, @params);
                     }
-                    var pros = target.Type.GetProperties().Where(t => t.CanRead&&!t.GetMethod.ContainsGenericParameters);
-                    foreach(var one in pros)
+                    
+                    var properties = target.Type.GetProperties().Where(t => t.CanRead&&!t.GetMethod.ContainsGenericParameters);
+                    PropertyInfo? targetProperty = null;
+                    PropertyInfo? failBackProperty = null;
+                    ParameterInfo[]? tmpParameters = null;
+                    foreach(var one in properties)
                     {
                         var paramInfos= one.GetIndexParameters();
-                        if(paramInfos.Length== Params.Length)
+                        if (paramInfos.Length == @params.Length)
                         {
-                            return Expression.Property(target, one, @params);
+                            failBackProperty ??= one;
+                            bool allTypeOk = true;
+                            bool anyIsSub = false;
+                            for (int i = 0; i < paramInfos.Length; i++)
+                            {
+                                if (!paramInfos[i].ParameterType.IsAssignableFrom(@params[i].Type))
+                                {
+                                    allTypeOk = false;
+                                    break;
+                                }
+
+                                if (tmpParameters != null)
+                                {
+                                    anyIsSub = anyIsSub || tmpParameters[i].ParameterType.IsAssignableFrom(paramInfos[i].ParameterType);
+                                }
+                            }
+                            if (allTypeOk)
+                            {
+                                if(targetProperty == null|| anyIsSub)
+                                {
+                                    targetProperty = one;
+                                    tmpParameters = paramInfos;
+                                }
+                            }
                         }
+                    }
+                    targetProperty ??= failBackProperty;
+                    if (targetProperty != null)
+                    {
+                        return Expression.Property(target, targetProperty, @params);
                     }
                     throw new ExpressionErrorException(StartIndex, OrginalStr);
                 default:
