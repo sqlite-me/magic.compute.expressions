@@ -10,6 +10,21 @@ namespace magic.compute.expressions
 {
     internal class ExpressonHelper
     {
+        private static readonly string[] keyWordsSystemTypes = {"bool",
+            "byte",
+            "char",
+            "decimal",
+            "double",
+            "enum",
+            "float",
+            "int",
+            "long",
+            "sbyte",
+            "short",
+            "struct",
+            "uint",
+            "ushort",
+            "ulong","string","object"};
         /// <summary>
         /// string | digit(int|double|flot...) | other word [a-z|A-Z|_|0_9]
         /// </summary>
@@ -184,6 +199,11 @@ namespace magic.compute.expressions
                                 tNode.EndIndex = i;
                                 tNode.ExpClosed = true;
                                 break;
+                            }
+                            else if (tNode.KeyWord == tNode.TypeName && tNode.ExpClosed)
+                            {
+                                tNode.KeyWord = "()";
+                                tNode.EndIndex = i;
                             }
                             else
                             {
@@ -471,11 +491,22 @@ namespace magic.compute.expressions
                 default:
                     if (word[0] == '"')// string
                     {
-                        _notComplateNodeStack.Add(new NodeConst(word.Trim('"'), _expressionStr, i, i + word.Length - 1)); break;
+                        _notComplateNodeStack.Add(new NodeConst(word.Trim('"'), _expressionStr, i, i + word.Length - 1));
+                        break;
                     }
                     else if ((word.Length == 3 && word[0] == '\'' && word[2] == '\''))// char
                     {
                         _notComplateNodeStack.Add(new NodeConst(word[1], _expressionStr, i, i + word.Length - 1));
+                        break;
+                    }
+                    else if (keyWordsSystemTypes.Contains(word)&& (!(_notComplateNodeStack.LastOrDefault() is NodeOperatorType nodeOptType)|| nodeOptType.ExpClosed))
+                    {
+                        _notComplateNodeStack.Add(new NodeOperatorType(_expressionStr, i, i + word.Length - 1)
+                        {
+                            KeyWord = word,
+                            TypeName = word,
+                            ExpClosed = true
+                        });
                         break;
                     }
                     else

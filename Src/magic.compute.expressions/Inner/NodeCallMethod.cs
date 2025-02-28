@@ -79,35 +79,100 @@ namespace magic.compute.expressions.Inner
             return expArray;
         }
 
+        static MethodInfo? getMethodByTypes(MethodInfo[] methods, Type[] paramTypes)
+        {
+            var arr = methods.Select(t => new { t, args = t.GetParameters() })
+                .Where(t => t.args.Length == paramTypes.Length || (t.args.Length > paramTypes.Length && t.args.Skip(paramTypes.Length).All(p => p.HasDefaultValue)))
+                .ToArray();
+
+            var nEqMethods = arr.ToList();
+            nEqMethods.Clear();
+
+            foreach (var method in arr)
+            {
+                var args = method.args;
+                bool isEq = true;
+                bool canAcc = true;
+                for(var i=0; i<paramTypes.Length; i++)
+                {
+                    if (isEq && paramTypes[i] != args[i].ParameterType)
+                    {
+                        isEq = false;
+                    }
+                    if (canAcc && (paramTypes[i] != args[i].ParameterType || !args[i].ParameterType.IsAssignableFrom(paramTypes[i])))
+                    {
+                        canAcc = false;
+                        if (args[i].ParameterType.IsGenericType)
+                        {
+                            if (paramTypes[i].HasElementType)
+                            {
+                                canAcc = true;
+                            }
+                        }
+                    }
+
+                    if (isEq == false && canAcc == false) break;
+                }
+                if (isEq == false && canAcc == false) continue;
+                if (isEq && args.Length==paramTypes.Length)
+                {
+                    return method.t;
+                }
+
+                if(isEq || canAcc)
+                {
+                    nEqMethods.Add(method);
+                }
+            }
+
+            if (nEqMethods.Count > 0)
+            {
+                return nEqMethods.OrderBy(t => t.args.Length).First().t;
+            }
+            return null;
+        }
+
         public override Expression GetExpression()
         {
             var targetExp = getTargetExp();
+            var targetType = (targetExp?.Type ?? (Target is NodeOperatorType nodeType ? nodeType.Type : null))
+                ?? throw new MethodAccessException($"unknown method {base.KeyWord} at {base.StartIndex}");
+
             var paramExps = getParamExp();
             var paramTypes= paramExps.Select(t=>t.Type).ToArray();
-            var method= targetExp.Type.GetMethod(base.KeyWord, paramTypes);
-            if(method != null&&!method.IsStatic)
-            {
-                return Expression.Call(targetExp,method,paramExps.ToArray());
+            var methods = targetType.GetMethods((targetExp==null?BindingFlags.Static:BindingFlags.Instance)|BindingFlags.Public);
+            methods= methods.Where(t=>t.Name==base.KeyWord).ToArray();
+
+            var method = getMethodByTypes(methods, paramTypes);
+            if (method != null && !method.IsStatic)
+            {// call instance method
+                return Expression.Call(targetExp, method, paramExps.ToArray());
             }
+            else if (method?.IsStatic == true && targetExp == null)
+            {// call static method
+                return Expression.Call(method, paramExps.ToArray());
+            }
+
+            // call extention method
             Type elementType;
-            if (targetExp.Type.IsArray)
+            if (targetType.IsArray)
             {
-                elementType = targetExp.Type.GetElementType();
+                elementType = targetType.GetElementType();
             }
-            else if (targetExp.Type.IsGenericType)
+            else if (targetType.IsGenericType)
             {
-                elementType = targetExp.Type.GenericTypeArguments[0];
+                elementType = targetType.GenericTypeArguments[0];
             }
             else
             {
-                throw new MethodAccessException($"{base.KeyWord} is not a method for {targetExp.Type.FullName}");
+                throw new MethodAccessException($"{base.KeyWord} is not a method for {targetType.FullName}");
             }
 
             paramTypes = new Type[] { typeof(IEnumerable<>).MakeGenericType(elementType) }.Concat(paramTypes).ToArray();
             method = typeof(System.Linq.Enumerable).GetMethod(base.KeyWord, paramTypes);
             if (method == null)
             {
-                var methods = typeof(System.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                methods = typeof(System.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
                     .Where(t => t.Name == base.KeyWord&&t.GetParameters()?.Length== paramTypes.Length).ToArray();
 
                 method = methods.FirstOrDefault(t=> elementType.IsSubclassOf(t.GetParameters()[0].ParameterType) || elementType == t.GetParameters()[0].ParameterType);
@@ -119,11 +184,11 @@ namespace magic.compute.expressions.Inner
             }
             if (method == null)
             {
-                throw new MethodAccessException($"{base.KeyWord} is not a extension method for {targetExp.Type.FullName} in System.Linq");
+                throw new MethodAccessException($"{base.KeyWord} is not a extension method for {targetType.FullName} in System.Linq");
             }
             
             //return Expression.Call(methodInfo,expressionBody);
-            paramExps.Insert(0, targetExp);
+            paramExps.Insert(0, targetExp!);
             return Expression.Call(method, paramExps);
         }
     }

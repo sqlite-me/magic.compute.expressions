@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq.Expressions;
 using magic.compute.expressions;
+using System.Reflection.Emit;
 
 namespace MagicExpression.Tests
 {
@@ -341,6 +342,67 @@ namespace MagicExpression.Tests
                 ")" +
                 ":0d";
             new MExpression(exp);
+        }
+
+        [TestMethod]
+        public void TestIsOrIsNot()
+        {
+            var expStr = "({0} is int)";
+            var args = new object[] { 123456 };
+            //  goto Lable;
+            var rlt = call(expStr, args);
+            Assert.AreEqual(rlt, true);
+
+            expStr = "({0} is not int)";
+            //  goto Lable;
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, false);
+
+            expStr = "({0} is string)";
+            //  goto Lable;
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, false);
+
+            expStr = "({0} is DateTime)";
+            //  goto Lable;
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, false);
+
+            expStr = "({0} is DateTime)";
+            args[0]=DateTime.Now;
+            //  goto Lable;
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, true);
+        }
+
+        [TestMethod]
+        public void TestPasre() {
+            var expStr = "int.Parse({0})";
+            var args = new object[] { "123456" };
+            goto Lable;
+            var rlt = call(expStr, args);
+            Assert.AreEqual(rlt, 123456);
+
+            expStr = "(int).Parse({0})";
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, 123456);
+
+            expStr = "double.Parse({0})";
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, 123456D);
+            Lable:
+            expStr = "string.Join(\",\",{0})";
+            args =new []{ new[] { "A", "B" } };
+
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, "A,B");
+
+
+            expStr = "string.Join(\",\",{0})";
+            args = new[] { new[] { 12, 98 } };
+            
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, "12,98");
         }
     }
 }

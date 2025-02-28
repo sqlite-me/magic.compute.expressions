@@ -61,6 +61,8 @@ namespace magic.compute.expressions.Inner
                     expression = Expression.IsFalse(GetTypeIsExpression());
                     break;
                 case "()":
+                    if (Target == null)
+                        return null;
                     var paraExp = Target.GetExpression();
                     try
                     {
@@ -68,16 +70,22 @@ namespace magic.compute.expressions.Inner
                     }
                     catch
                     {
-                        var method = getConvert(paraExp.Type,Type,out Type needConvert);
+                        var method = getConvert(paraExp.Type, Type, out Type needConvert);
                         if (method == null) throw;
-                        if (needConvert!=null)
+                        if (needConvert != null)
                         {
                             paraExp = Expression.Convert(paraExp, needConvert);
                         }
-                        expression = Expression.Call(method,paraExp);
+                        expression = Expression.Call(method, paraExp);
                     }
                     break;
                 default:
+                    if (KeyWord == TypeName)
+                    {
+                        // GetType
+                        expression = null;
+                        break;
+                    }
                     throw new NotImplementedException();
             }
             return expression;
