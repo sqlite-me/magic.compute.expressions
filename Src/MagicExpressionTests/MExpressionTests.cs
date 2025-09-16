@@ -266,80 +266,107 @@ namespace MagicExpression.Tests
             new MExpression("{5}.Days.Lenght");
             new MExpression("{5}.Days.Lenght({1},true,{2})");
             new MExpression("{5}.Days({1},2).Lenght");
-            rlt = callNew(expStr, args);
-            //Assert.AreEqual(rlt, false);
 
 
             expStr = "({0} ?? false) ? \"yes\" : \"no\"";
             rlt = callNew(expStr, (object)null);
+            Assert.AreEqual(rlt, "no");
+
             args[0] = null;
             expStr = "(({0} == null) || ({0} == \"\"))";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, true);
 
             expStr = "(({0} == null) || ({0} == \"\")) ? \"/Image/empty_big.png\" : {0}";
             rlt = callNew(expStr, args);
-
+            Assert.AreEqual(rlt, "/Image/empty_big.png");
 
             expStr = "{0} +2 * {1}";
-            args = new object[] {10.3,5 };
+            args = new object[] { 10.3, 5 };
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, 20.3);
 
             expStr = "({0} +{2}) * ({1} -{3})";
-            args = new object[] { 10.3, 5,15,20 };
+            args = new object[] { 10.3, 5, 15, 20 };
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, ((double)args[0] + (int)args[2]) * ((int)args[1] - (int)args[3]));
 
             expStr = "({0} >=2)? 2 : {1}";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, 2);
 
             expStr = "({1}-{0}).TotalMinutes + {2}";
             DateTime t1 = DateTime.Now, t2 = DateTime.Now.AddMinutes(5);
-            rlt = callNew(expStr, new object[] {t1,t2,100 } );
+            rlt = callNew(expStr, new object[] { t1, t2, 100 });
+            Assert.AreEqual(rlt, (t2 - t1).TotalMinutes + 100);
 
             expStr = "({1}??1.0) / (double){0}";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, (int)args[1] / (double)args[0]);
 
             expStr = "((int)({1}??1.0)) >> (int){0}";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, (int)(args[1]) >> (int)((double)args[0]));
 
             expStr = "{0} + {1}";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, (double)args[0] + (int)args[1]);
+
+            rlt = callNew("{0}%{1}", 10, 3);
+            Assert.AreEqual(rlt, 1);
 
             expStr = "({0} is DateTime)? ({0} as DateTime).Year: {1}";
-            rlt = callNew(expStr, new object[] {DateTime.Now,10 });
+            rlt = callNew(expStr, new object[] { DateTime.Now, 10 });
+            Assert.AreEqual(rlt, DateTime.Now.Year);
 
 
             expStr = "({0} is TimeSpan ts)? ts.Days: {1}";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, args[1]);
 
             expStr = "({0} is not TimeSpan ts)? {1}:ts.Days.ToString()";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, args[1]);
 
             expStr = "({0} is not TimeSpan ts)? {1}:ts.Days.ToString().Length";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, args[1]);
 
             expStr = "({0} is IList ts)? \"yes\": \"no\"";
             rlt = callNew(expStr, args);
+            Assert.AreEqual(rlt, "no");
 
 
             expStr = "({0} is magic.compute.expressions.MExpression;assembly=magic.compute.expressions ts)? {1}: {2}";
-            rlt = callNew(expStr, new object[] { new MExpression("1"),true,false });
+            rlt = callNew(expStr, new object[] { new MExpression("1"), true, false });
+            Assert.AreEqual(rlt, true);
 
-            var mExp = new MExpression("{0} + {1} * {2} /{3}");
+            var mExp = callNew("{0} + {1} * {2} /{3}", 10.5, 3, 3, 5);
+            Assert.AreEqual(mExp, 10.5 + 3 * 3 / 5);
 
 
-            mExp = new MExpression("[{0},{0},{2},{3}].Sum(1,{2})");
-            mExp = new MExpression("({0} is int _i)?[{0},_i,{2},{3}].Max(_i,true)");
+            mExp = callNew("[{0},{0},{2},{3}].Sum()",10,-1,3,5);
+            Assert.AreEqual(mExp,new int[] { 10, 10, 3, 5 }.Sum());
+            //mExp = callNew("({0} is int _i)?[{0},_i,{2},{3}].Max(_i,true)");
 
-            mExp = new MExpression("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:[t1,t2].Max()");
-
-            mExp = new MExpression("({0} is DateTime dt && dt.TotalSeconds> 0)? true:false");
+            mExp = callNew("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:[t1,t2].Max()",null,null);
+            Assert.AreEqual(mExp, null);
+            
+            mExp = callNew("({0} is DateTime dt && dt.Second> 0)? true:false", DateTime.Now);
+            Assert.AreEqual(mExp, true);
 
             var exp = "(({0} is DateTime preEnd)&&({1} is DateTime preEsEnd)&&({2} is DateTime start)&&({3} is double scale))?" +
                 "(" +
                 "((start-[preEnd,preEsEnd].Max()).TotalSeconds is double timeDiff)?(timeDiff * scale):0d" +
                 ")" +
                 ":0d";
-            new MExpression(exp);
+            var start= DateTime.Now;
+            var preEnd =DateTime.Now.AddYears(1);
+            var preEsEnd = DateTime.Now.AddYears(2);
+            var scale = 6.1;
+
+            rlt = callNew(exp,preEnd,preEsEnd,start,scale);
+            Assert.AreEqual(rlt, ((start - new DateTime[] { preEnd, preEsEnd }.Max()).TotalSeconds is double timeDiff) ? (timeDiff * scale):0);
         }
 
         [TestMethod]
