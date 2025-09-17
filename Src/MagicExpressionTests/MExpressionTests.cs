@@ -315,6 +315,13 @@ namespace MagicExpression.Tests
             rlt = callNew("{0}%{1}", 10, 3);
             Assert.AreEqual(rlt, 1);
 
+            rlt = callNew("{0}%{1}", 10.1, 3.0);
+            Assert.AreEqual(rlt, 10.1 % 3.0);
+
+
+            rlt = callNew("(int){0}%(int){1}", 10.1, 3.0);
+            Assert.AreEqual(rlt, 1);
+
             expStr = "({0} is DateTime)? ({0} as DateTime).Year: {1}";
             rlt = callNew(expStr, new object[] { DateTime.Now, 10 });
             Assert.AreEqual(rlt, DateTime.Now.Year);
