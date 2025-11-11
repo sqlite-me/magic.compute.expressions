@@ -244,7 +244,7 @@ namespace magic.compute.expressions
                                 Target=aNode.Target,
                                 };
                             // process params
-                            callMethodNode.Params= bracket.NodeDatas.ToArray();
+                            callMethodNode.Params= bracket.NodeDatas.ToList();
                             _notComplateNodeStack.RemoveAt(_notComplateNodeStack.Count - 1);
                             callMethodNode.ExpClosed=true;
                             callMethodNode.SetNodeComplated();
@@ -279,7 +279,7 @@ namespace magic.compute.expressions
                                                     Target = node,
                                                 };
                                             bracket.SetExpClosed();
-                                            aNodeNew.Params = bracket.NodeDatas.ToArray();
+                                            aNodeNew.Params = bracket.NodeDatas.ToList();
                                             _notComplateNodeStack.RemoveAt(_notComplateNodeStack.Count - 1);
                                             aNodeNew.ExpClosed = true;
                                             bracket = null;

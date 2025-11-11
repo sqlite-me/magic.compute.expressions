@@ -7,7 +7,7 @@
 
 	<PropertyGroup>
 		<PackageId>magic.compute.expressions</PackageId>
-		<Version>1.0.0.5</Version>
+		<Version>1.0.0.6</Version>
 		<PackageTags>dotnet C# compute expresion</PackageTags>
 		<Authors>sqlite-me</Authors>
 		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->

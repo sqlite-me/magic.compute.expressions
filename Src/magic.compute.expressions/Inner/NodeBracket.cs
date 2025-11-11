@@ -57,23 +57,7 @@ namespace magic.compute.expressions.Inner
 
             ProcessConvertNode(this.NodeDatas,true);
 
-            var operators = new string[] { "??" };
-            DoubleOperatorToTree(NodeDatas, operators);
-
-            operators = new string[] { "|", "&", "^", ">>", "<<" };
-            DoubleOperatorToTree(NodeDatas, operators);
-
-            operators = new string[] { "*", "/", "%" };
-            DoubleOperatorToTree(NodeDatas, operators);
-
-            operators = new string[] { "+", "-" };
-            DoubleOperatorToTree(NodeDatas, operators);
-
-            operators = new string[] { ">", "<", ">=", "<=", "==", "!=" };
-            DoubleOperatorToTree(NodeDatas, operators);
-
-            operators = new string[] { "&&", "||" };
-            DoubleOperatorToTree(NodeDatas, operators);
+            DoubleOperatorToTree(NodeDatas);
 
             for (var i= 0;i< NodeDatas.Count; i++)
             {
@@ -139,27 +123,6 @@ namespace magic.compute.expressions.Inner
             }
         }
         
-        private static void DoubleOperatorToTree(List<NodeData> listNodes, string[] operators)
-        {
-            int len = listNodes.Count;
-            for (int i = 0; i < len; i++)
-            {
-                switch (listNodes[i])
-                {
-                    case NodeOperatorDouble @double:
-                        if (operators.Contains(@double.KeyWord) && @double.Left==null&&@double.Right==null)
-                        {
-                            @double.Left = listNodes[i - 1];
-                            @double.Right = listNodes[i + 1];
-                            listNodes.RemoveAt(i + 1);
-                            listNodes.RemoveAt(i - 1);
-                            i--;
-                            len -= 2;
-                        }
-                        break;
-                }
-            }
-        }
         public void AddNode(NodeData nodeData)
         {
             NodeDatas.Add(nodeData);

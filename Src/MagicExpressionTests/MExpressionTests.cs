@@ -352,28 +352,29 @@ namespace MagicExpression.Tests
             Assert.AreEqual(mExp, 10.5 + 3 * 3 / 5);
 
 
-            mExp = callNew("[{0},{0},{2},{3}].Sum()",10,-1,3,5);
-            Assert.AreEqual(mExp,new int[] { 10, 10, 3, 5 }.Sum());
+            mExp = callNew("[{0},{0},{2},{3}].Sum()", 10, -1, 3, 5);
+            Assert.AreEqual(mExp, new int[] { 10, 10, 3, 5 }.Sum());
             //mExp = callNew("({0} is int _i)?[{0},_i,{2},{3}].Max(_i,true)");
 
-            mExp = callNew("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:[t1,t2].Max()",null,null);
+            mExp = callNew("(({0} is not DateTime t1) ||( {1} is not DateTime t2))?null:[t1,t2].Max()", null, null);
             Assert.AreEqual(mExp, null);
-            
-            mExp = callNew("({0} is DateTime dt && dt.Second> 0)? true:false", DateTime.Now);
-            Assert.AreEqual(mExp, true);
+
+            var now = DateTime.Now;
+            mExp = callNew("({0} is DateTime dt && dt.Second> 0)? true:false", now);
+            Assert.AreEqual(mExp, now.Second > 0);
 
             var exp = "(({0} is DateTime preEnd)&&({1} is DateTime preEsEnd)&&({2} is DateTime start)&&({3} is double scale))?" +
                 "(" +
                 "((start-[preEnd,preEsEnd].Max()).TotalSeconds is double timeDiff)?(timeDiff * scale):0d" +
                 ")" +
                 ":0d";
-            var start= DateTime.Now;
-            var preEnd =DateTime.Now.AddYears(1);
+            var start = DateTime.Now;
+            var preEnd = DateTime.Now.AddYears(1);
             var preEsEnd = DateTime.Now.AddYears(2);
             var scale = 6.1;
 
-            rlt = callNew(exp,preEnd,preEsEnd,start,scale);
-            Assert.AreEqual(rlt, ((start - new DateTime[] { preEnd, preEsEnd }.Max()).TotalSeconds is double timeDiff) ? (timeDiff * scale):0);
+            rlt = callNew(exp, preEnd, preEsEnd, start, scale);
+            Assert.AreEqual(rlt, ((start - new DateTime[] { preEnd, preEsEnd }.Max()).TotalSeconds is double timeDiff) ? (timeDiff * scale) : 0);
         }
 
         [TestMethod]
@@ -439,6 +440,60 @@ namespace MagicExpression.Tests
 
             rlt = call(expStr, args);
             Assert.AreEqual(rlt, "12,98");
+
+            expStr = "string.Equals({0},{1})";
+            args = new object[] { "ab", "aB" };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, false);
+
+            expStr = "string.Equals({0},{1},{2})";
+            args = new object[] { "ab", "aB", StringComparison.OrdinalIgnoreCase };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, true);
+
+            expStr = "string.Compare({0},{1})";
+            args = new object[] { "Ab", "aB" };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, string.Compare((string)args[0], (string)args[1]));
+            expStr = "string.Compare({0},{1},{2})";
+            args = new object[] { "ab", "aB", false };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, string.Compare((string)args[0], (string)args[1], false));
+            expStr = "string.Compare({0},{1},{2})";
+            args = new object[] { "ab", "aB", true };
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, string.Compare((string)args[0], (string)args[1], true));
+        }
+
+        [TestMethod]
+        public void TestStaticMethod()
+        {
+            var nnn = typeof(Math).GetType().Assembly.FullName;
+            var expStr = "(System.Math;assembly=System.Private.CoreLib).Floor({0})";
+            object[] args = new object[] { 1.256 };
+
+            //var rlt = call(expStr, args);
+            //Assert.AreEqual(rlt, Math.Floor((double)args[0]));
+
+            //expStr = "double.Floor({0})";
+            //args = new object[] { 1.256 };
+
+            //rlt = call(expStr, args);
+            //Assert.AreEqual(rlt, Math.Floor((double)args[0]));
+            ////Math.Floor()
+
+            //Math.Floor()
+            expStr = "{0}*(double).PI";
+            args = new object[] { 1.256 };
+
+            var rlt = call(expStr, args);
+            Assert.AreEqual(rlt, (double)args[0] * Math.PI);
+
+            expStr = "double.Floor({0}*(double).PI)";
+            args = new object[] { 1.256 };
+
+            rlt = call(expStr, args);
+            Assert.AreEqual(rlt, Math.Floor((double)args[0] * Math.PI));
         }
     }
 }

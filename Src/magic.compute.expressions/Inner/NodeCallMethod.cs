@@ -23,6 +23,11 @@ namespace magic.compute.expressions.Inner
             if (Target == null) throw new Exception(nameof(Target) + " can not be null");
             if (string.IsNullOrWhiteSpace(KeyWord)) throw new Exception(nameof(KeyWord) + " can not be empty");
 
+            if (this.Params?.Count > 0)
+            {
+                DoubleOperatorToTree(this.Params);
+            }
+
             _nodeComplated = true;
         }
         private Expression getTargetExp()
@@ -71,7 +76,7 @@ namespace magic.compute.expressions.Inner
         private List<Expression> getParamExp()
         {
             List<Expression> expArray = new List<Expression>();
-            if (Params?.Length > 0)
+            if (Params?.Count > 0)
             {
                 foreach (var param in Params)
                 {
@@ -171,7 +176,7 @@ namespace magic.compute.expressions.Inner
             }
 
             // call extention method
-            if (!targetType.IsGenericType &&!targetType.HasElementType)
+            if (!targetType.IsGenericType && !targetType.HasElementType)
             {
                 throw new MethodAccessException($"{base.KeyWord} is not a method for {targetType.FullName}");
             }
@@ -235,22 +240,34 @@ namespace magic.compute.expressions.Inner
                 .Where(t => t.Parameters.Length >= parameterTypes.Length)
                 .ToList();
 
-            if (!candidateMethods.Any())
-                return null;
+            if (candidateMethods.Any())
+            {
+                // 2. 分离普通方法和泛型方法定义
+                var normalMethods = candidateMethods.Where(m => !m.Method.IsGenericMethodDefinition)
+                    .OrderBy(t => t.Parameters.Length).ToList();
+                var genericMethodDefinitions = candidateMethods.Where(m => m.Method.IsGenericMethodDefinition)
+                    .OrderBy(t => t.Parameters.Length).ToList();
 
-            // 2. 分离普通方法和泛型方法定义
-            var normalMethods = candidateMethods.Where(m => !m.Method.IsGenericMethodDefinition)
-                .OrderBy(t => t.Parameters.Length).ToList();
-            var genericMethodDefinitions = candidateMethods.Where(m => m.Method.IsGenericMethodDefinition)
-                .OrderBy(t => t.Parameters.Length).ToList();
+                // 3. 先检查普通方法是否有完全匹配
+                var bestNormalMethod = FindBestMatchNormalMethod(normalMethods, parameterTypes);
+                if (bestNormalMethod != null)
+                    return bestNormalMethod;
 
-            // 3. 先检查普通方法是否有完全匹配
-            var bestNormalMethod = FindBestMatchNormalMethod(normalMethods, parameterTypes);
-            if (bestNormalMethod != null)
-                return bestNormalMethod;
+                // 4. 检查泛型方法是否有匹配
+                bestNormalMethod = FindBestMatchGenericMethod(genericMethodDefinitions, parameterTypes);
+                if (bestNormalMethod != null)
+                    return bestNormalMethod;
+            }
 
-            // 4. 检查泛型方法是否有匹配
-            return FindBestMatchGenericMethod(genericMethodDefinitions, parameterTypes);
+            if (isStatic && parameterTypes?.Length > 0 && parameterTypes[0] == type)
+            {
+                var bestNormalMethod = typeof(Math).GetMethod(methodName, parameterTypes)
+                    ?? typeof(MathF).GetMethod(methodName, parameterTypes)
+                    ?? typeof(Convert).GetMethod(methodName, parameterTypes);
+                if (bestNormalMethod != null)
+                    return bestNormalMethod;
+            }
+            return null;
         }
 
         /// <summary>

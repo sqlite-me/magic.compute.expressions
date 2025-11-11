@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -58,6 +59,49 @@ namespace magic.compute.expressions.Inner
             }
 
             return leftTypeCode > rightTypeCode ? leftTypeCode : rightTypeCode;
+        }
+
+        protected static void DoubleOperatorToTree(List<NodeData> listNodes)
+        {
+            var operators = new string[] { "??" };
+            DoubleOperatorToTree(listNodes, operators);
+
+            operators = new string[] { "|", "&", "^", ">>", "<<" };
+            DoubleOperatorToTree(listNodes, operators);
+
+            operators = new string[] { "*", "/", "%" };
+            DoubleOperatorToTree(listNodes, operators);
+
+            operators = new string[] { "+", "-" };
+            DoubleOperatorToTree(listNodes, operators);
+
+            operators = new string[] { ">", "<", ">=", "<=", "==", "!=" };
+            DoubleOperatorToTree(listNodes, operators);
+
+            operators = new string[] { "&&", "||" };
+            DoubleOperatorToTree(listNodes, operators);
+
+        }
+        private static void DoubleOperatorToTree(List<NodeData> listNodes, string[] operators)
+        {
+            int len = listNodes.Count;
+            for (int i = 0; i < len; i++)
+            {
+                switch (listNodes[i])
+                {
+                    case NodeOperatorDouble @double:
+                        if (operators.Contains(@double.KeyWord) && @double.Left == null && @double.Right == null)
+                        {
+                            @double.Left = listNodes[i - 1];
+                            @double.Right = listNodes[i + 1];
+                            listNodes.RemoveAt(i + 1);
+                            listNodes.RemoveAt(i - 1);
+                            i--;
+                            len -= 2;
+                        }
+                        break;
+                }
+            }
         }
     }
 }
